@@ -1,28 +1,65 @@
-import { useState } from 'react';
-import { collection, addDoc } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { collection, addDoc, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import './MainApp.css';
 import AddPlayerModal from '../components/AddPlayerModal';
+import ViewPlayersModal from '../components/ViewPlayersModal';
 import illustrationVideo from '../assets/illustration.mp4';
 
 function MainApp() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [players, setPlayers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
 
+  // Fetch players from Firestore on mount and listen for changes
+  useEffect(() => {
+    if (!user) return;
+
+    // Query only players created by the current user
+    const q = query(
+      collection(db, 'players'),
+      where('userId', '==', user.uid)
+    );
+
+    // Set up real-time listener
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const playersData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        // Sort by createdAt in JavaScript instead
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        setPlayers(playersData);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching players:', error);
+        setLoading(false);
+      }
+    );
+
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+  }, [user]);
+
   const handleAddPlayer = () => {
-    setIsModalOpen(true);
+    setIsAddModalOpen(true);
   };
 
   const handleCreateTeams = () => {
     // Placeholder for create teams functionality
     console.log('Create Teams clicked!');
+    alert('יכולת יצירת קבוצות תגיע בקרוב!');
   };
 
   const handleViewPlayers = () => {
-    // Placeholder for view players functionality
-    console.log('View Players clicked!', players);
+    setIsViewModalOpen(true);
   };
 
   const handleSavePlayer = async (player) => {
@@ -36,31 +73,43 @@ function MainApp() {
       
       await addDoc(collection(db, 'players'), playerData);
       
-      // Update local state
-      setPlayers([...players, playerData]);
-      setIsModalOpen(false);
+      setIsAddModalOpen(false);
+      // No need to update local state - real-time listener will handle it
     } catch (error) {
       console.error('Error saving player:', error);
-      alert('Failed to save player. Please try again.');
+      alert('שמירת השחקן נכשלה. אנא נסה שוב.');
     }
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
   };
 
   const handleLogout = async () => {
-    if (window.confirm('Are you sure you want to logout?')) {
+    if (window.confirm('האם אתה בטוח שברצונך להתנתק?')) {
       await logout();
     }
   };
+
+  if (loading) {
+    return (
+      <div className="app">
+        <div className="loading-container">
+          <p>טוען...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
       <video 
         className="background-video" 
-        autoPlay 
-        loop 
+        autoPlay={false}
         muted 
         playsInline
       >
@@ -68,11 +117,10 @@ function MainApp() {
       </video>
       
       <header className="app-header">
-        <h1 className="app-title">Team Builder</h1>
-        <div className="user-info">
+        <div className="user-info" style={{flexDirection:"column"}}>
           <span className="user-name">{user?.displayName || user?.email}</span>
           <button className="logout-btn" onClick={handleLogout}>
-            Logout
+            התנתק
           </button>
         </div>
       </header>
@@ -83,29 +131,36 @@ function MainApp() {
             className="btn btn-primary" 
             onClick={handleAddPlayer}
           >
-            Add Player
+            הוסף שחקן
           </button>
           
           <button 
             className="btn btn-secondary" 
             onClick={handleCreateTeams}
           >
-            Create Teams
+            הרכב קבוצות
           </button>
           
           <button 
             className="btn btn-primary" 
             onClick={handleViewPlayers}
           >
-            View Players
+            צפה בכל השחקנים ({players.length})
           </button>
         </div>
       </main>
 
-      {isModalOpen && (
+      {isAddModalOpen && (
         <AddPlayerModal 
           onSave={handleSavePlayer}
-          onClose={handleCloseModal}
+          onClose={handleCloseAddModal}
+        />
+      )}
+
+      {isViewModalOpen && (
+        <ViewPlayersModal
+          players={players}
+          onClose={handleCloseViewModal}
         />
       )}
     </div>

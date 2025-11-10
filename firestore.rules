@@ -1,0 +1,20 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Players collection - users can only read/write their own data
+    match /players/{playerId} {
+      // Allow users to read only their own players
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Allow users to create players with their own userId
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      // Allow users to update only their own players
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Allow users to delete only their own players
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+  }
+}

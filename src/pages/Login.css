@@ -6,6 +6,21 @@
   justify-content: center;
   background-color: var(--bg-grey);
   padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background Video */
+.background-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .login-card {
@@ -16,10 +31,15 @@
   width: 100%;
   max-width: 400px;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .login-title {
-  color: var(--title-blue);
+  background: linear-gradient(135deg, #2196F3 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 2.5rem;
   font-weight: bold;
   margin: 0 0 0.5rem 0;
