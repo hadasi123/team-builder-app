@@ -5,11 +5,14 @@ import { useAuth } from '../context/AuthContext';
 import './MainApp.css';
 import AddPlayerModal from '../components/AddPlayerModal';
 import ViewPlayersModal from '../components/ViewPlayersModal';
+import GenerateTeamModal from '../components/GenerateTeamModal';
 import illustrationVideo from '../assets/illustration.mp4';
 
 function MainApp() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isGenerateTeamModalOpen, setIsGenerateTeamModalOpen] = useState(false);
+
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
@@ -55,7 +58,7 @@ function MainApp() {
   const handleCreateTeams = () => {
     // Placeholder for create teams functionality
     console.log('Create Teams clicked!');
-    alert('יכולת יצירת קבוצות תגיע בקרוב!');
+    setIsGenerateTeamModalOpen(true);
   };
 
   const handleViewPlayers = () => {
@@ -163,6 +166,14 @@ function MainApp() {
           onClose={handleCloseViewModal}
         />
       )}
+      {
+        isGenerateTeamModalOpen && (
+        <GenerateTeamModal
+          onClose={() => setIsGenerateTeamModalOpen(false)}
+          players={players}
+        />
+      )
+      }
     </div>
   );
 }
