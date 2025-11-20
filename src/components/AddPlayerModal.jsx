@@ -1,10 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './AddPlayerModal.css';
 
-function AddPlayerModal({ onSave, onClose }) {
+function AddPlayerModal({ onSave, onClose, editPlayer = null }) {
   const [playerName, setPlayerName] = useState('');
   const [defenseScore, setDefenseScore] = useState('');
   const [offenseScore, setOffenseScore] = useState('');
+
+  // Pre-fill form if editing
+  useEffect(() => {
+    if (editPlayer) {
+      setPlayerName(editPlayer.playerName);
+      setDefenseScore(editPlayer.defenseScore.toString());
+      setOffenseScore(editPlayer.offenseScore.toString());
+    }
+  }, [editPlayer]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -24,22 +33,28 @@ function AddPlayerModal({ onSave, onClose }) {
       playerName: playerName.trim(),
       defenseScore: Number(defenseScore),
       offenseScore: Number(offenseScore),
-      id: Date.now() // Simple unique ID
     };
+
+    // If editing, include the player ID
+    if (editPlayer) {
+      player.id = editPlayer.id;
+    }
 
     onSave(player);
     
-    // Reset form
-    setPlayerName('');
-    setDefenseScore('');
-    setOffenseScore('');
+    // Reset form only if not editing
+    if (!editPlayer) {
+      setPlayerName('');
+      setDefenseScore('');
+      setOffenseScore('');
+    }
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">הוסף שחקן</h2>
+          <h2 className="modal-title">{editPlayer ? 'ערוך שחקן' : 'הוסף שחקן'}</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
         

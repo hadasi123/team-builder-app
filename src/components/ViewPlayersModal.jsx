@@ -1,13 +1,34 @@
+import { useState } from 'react';
 import './ViewPlayersModal.css';
+import AddPlayerModal from './AddPlayerModal';
 
-function ViewPlayersModal({ players, onClose }) {
+function ViewPlayersModal({ players, onClose, onEditPlayer, onDeletePlayer }) {
+  const [editingPlayer, setEditingPlayer] = useState(null);
+
+  const handlePlayerClick = (player) => {
+    setEditingPlayer(player);
+  };
+
+  const handleSaveEdit = (updatedPlayer) => {
+    onEditPlayer(updatedPlayer);
+    setEditingPlayer(null);
+  };
+
+  const handleDelete = (playerId, playerName, e) => {
+    e.stopPropagation(); // Prevent triggering edit
+    if (window.confirm(`האם אתה בטוח שברצונך למחוק את ${playerName}?`)) {
+      onDeletePlayer(playerId);
+    }
+  };
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content view-players-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">השחקנים שלי</h2>
-          <button className="close-button" onClick={onClose}>×</button>
-        </div>
+    <>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content view-players-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2 className="modal-title">השחקנים שלי</h2>
+            <button className="close-button" onClick={onClose}>×</button>
+          </div>
         
         <div className="players-content">
           {players.length === 0 ? (
@@ -18,16 +39,27 @@ function ViewPlayersModal({ players, onClose }) {
           ) : (
             <div className="players-list">
               {players.map((player) => (
-                <div key={player.id} className="player-card">
+                <div 
+                  key={player.id} 
+                  className="player-card"
+                  onClick={() => handlePlayerClick(player)}
+                >
+                  <button 
+                    className="delete-player-btn"
+                    onClick={(e) => handleDelete(player.id, player.playerName, e)}
+                    title="מחק שחקן"
+                  >
+                    ×
+                  </button>
                   <h3 className="player-name">{player.playerName}</h3>
                   <div className="player-stats">
                     <div className="stat">
-                      <span className="stat-label">הגנה</span>
-                      <span className="stat-value">{player.defenseScore}</span>
+                      <span className="player-info">הגנה</span>
+                      <span className="player-info">{player.defenseScore}</span>
                     </div>
                     <div className="stat">
-                      <span className="stat-label">התקפה</span>
-                      <span className="stat-value">{player.offenseScore}</span>
+                      <span className="player-info">התקפה</span>
+                      <span className="player-info">{player.offenseScore}</span>
                     </div>
                   </div>
                   <div className="player-total">
@@ -41,8 +73,17 @@ function ViewPlayersModal({ players, onClose }) {
             </div>
           )}
         </div>
+        </div>
       </div>
-    </div>
+
+      {editingPlayer && (
+        <AddPlayerModal
+          editPlayer={editingPlayer}
+          onSave={handleSaveEdit}
+          onClose={() => setEditingPlayer(null)}
+        />
+      )}
+    </>
   );
 }
 

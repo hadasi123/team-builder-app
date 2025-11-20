@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import './MainApp.css';
@@ -92,6 +92,47 @@ function MainApp() {
     setIsViewModalOpen(false);
   };
 
+  const handleEditPlayer = async (updatedPlayer) => {
+    try {
+      const playerId = String(updatedPlayer.id); // Ensure ID is a string
+      if (!playerId || playerId === 'undefined' || playerId === 'null') {
+        console.error('Invalid player ID:', updatedPlayer.id);
+        alert('שגיאה: מזהה שחקן לא תקין');
+        return;
+      }
+      
+      const playerRef = doc(db, 'players', playerId);
+      // eslint-disable-next-line no-unused-vars
+      const { id, ...playerData } = updatedPlayer; // Remove id from update data
+      await updateDoc(playerRef, playerData);
+      // Real-time listener will handle the update
+    } catch (error) {
+      console.error('Error updating player:', error);
+      alert('עדכון השחקן נכשל. אנא נסה שוב.');
+    }
+  };
+
+  const handleDeletePlayer = async (playerId) => {
+    try {
+      console.log('Delete player ID:', playerId, 'Type:', typeof playerId);
+      
+      if (!playerId) {
+        console.error('Player ID is missing');
+        alert('שגיאה: מזהה שחקן חסר');
+        return;
+      }
+      
+      const playerIdString = String(playerId);
+      console.log('Converted ID:', playerIdString);
+      
+      await deleteDoc(doc(db, 'players', playerIdString));
+      // Real-time listener will handle the removal
+    } catch (error) {
+      console.error('Error deleting player:', error);
+      alert('מחיקת השחקן נכשלה. אנא נסה שוב.');
+    }
+  };
+
   const handleLogout = async () => {
     if (window.confirm('האם אתה בטוח שברצונך להתנתק?')) {
       await logout();
@@ -164,6 +205,8 @@ function MainApp() {
         <ViewPlayersModal
           players={players}
           onClose={handleCloseViewModal}
+          onEditPlayer={handleEditPlayer}
+          onDeletePlayer={handleDeletePlayer}
         />
       )}
       {

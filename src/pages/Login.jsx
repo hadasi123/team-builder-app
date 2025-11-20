@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
+import illustrationVideo from '../assets/illustration.mp4';
 import './Login.css';
 
 function Login() {
@@ -31,7 +32,7 @@ function Login() {
         muted
         playsInline
       >
-        <source src="/assets/illustration.mp4" type="video/mp4" />
+        <source src={illustrationVideo} type="video/mp4" />
       </video>
 
       <div className="login-card">
